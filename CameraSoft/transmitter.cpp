@@ -28,23 +28,20 @@ void ResizeRect(cv::Rect& rect) {
 
 void FilterOverlappingRects(const std::vector<cv::Rect> &detections, std::vector<cv::Rect> &filteredDetections) {
     size_t i, j;
-    for( i = 0; i < detections.size(); i++ )
-    {
-        cv::Rect r = detections[i];
-        for( j = 0; j < detections.size(); j++ ) {
-            //filter out overlapping rectangles
-            if ( j!=i ) {
-                cv::Rect iRect =  r;
-                cv::Rect jRect = detections[j];
-                cv::Rect intersectRect = (iRect & jRect);
-                if (intersectRect.area() >= iRect.area()) {
+        for( i = 0; i < detections.size(); i++ )
+        {
+            cv::Rect r = detections[i];
+            for( j = 0; j < detections.size(); j++ ) {
+                //filter out overlapping rectangles
+                if ( j!=i  && ((r & detections[j]).area() >= r.area() * 0.7
+                                || (r & detections[j]) == r)){
                     break;
                 }
             }
+
+            if( j == detections.size() )
+                filteredDetections.push_back(r);
         }
-        if( j == detections.size() )
-            filteredDetections.push_back(r);
-    }
 }
 
 
@@ -52,7 +49,7 @@ void Transmitter::exec()
 {
     cv::Mat currFrame;
     cv::VideoCapture cap;
-    cap.open("C:/Projects/CameraSoft/CameraSoft/6.mp4");
+    cap.open("C:/Projects/CameraSoft/CameraSoft/test_video_3.mp4");
 
     cv::HOGDescriptor hog;
     hog.setSVMDetector(cv::HOGDescriptor::getDefaultPeopleDetector());
@@ -77,7 +74,7 @@ void Transmitter::exec()
         std::vector<cv::Rect> found_filtered;
         std::vector<double> weights;
 
-        hog.detectMultiScale(currFrame, found, weights, 0.7, cv::Size(8, 8), cv::Size(128, 128), 1.059, 2);
+        hog.detectMultiScale(currFrame, found, weights, 0.3, cv::Size(8, 8), cv::Size(128, 128), 1.059, 2);
         FilterOverlappingRects(found, found_filtered);
 
         for( size_t i = 0; i < found_filtered.size(); i++ )
