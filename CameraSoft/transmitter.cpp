@@ -49,7 +49,7 @@ void Transmitter::exec()
 {
     cv::Mat currFrame;
     cv::VideoCapture cap;
-    cap.open("C:/Projects/CameraSoft/CameraSoft/test_video_3.mp4");
+    cap.open("C:/Projects/CameraSoft/CameraSoft/sample_1.avi");
 
     cv::HOGDescriptor hog;
     hog.setSVMDetector(cv::HOGDescriptor::getDefaultPeopleDetector());
