@@ -5,7 +5,7 @@
 #include <opencv2/videoio.hpp>
 #include <opencv2/highgui.hpp>
 #include "mainwindow.h"
-#include "transmitter.h"
+#include "processor.h"
 
 
 int main(int argc, char *argv[])
@@ -13,9 +13,9 @@ int main(int argc, char *argv[])
     QApplication a(argc, argv);
     MainWindow w;
     QThread *transmissionThread = QThread::create([&](){
-        Transmitter transmitter;
-        QObject::connect(&transmitter, SIGNAL(showCurrentFrame(QImage)), &w, SLOT(onShowCurrentFrame(QImage)));
-        transmitter.exec();
+        Processor processor;
+        QObject::connect(&processor, SIGNAL(showCurrentFrame(QImage)), &w, SLOT(onShowCurrentFrame(QImage)));
+        processor.exec();
     });
     QObject::connect(transmissionThread, SIGNAL(finished()), transmissionThread, SLOT(deleteLater()));
     transmissionThread->start();
