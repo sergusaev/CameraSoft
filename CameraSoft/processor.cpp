@@ -23,7 +23,7 @@ void Processor::exec()
 {
     cv::Mat currFrame;
     cv::VideoCapture cap;
-    cap.open(/*"C:/Projects/CameraSoft/CameraSoft/sample_1.avi"*/0);
+    cap.open(/*"../CameraSoft/test_video_sample_1.mp4"*/0);
 
     if (!cap.isOpened()) {
         qDebug() << "ERROR! Unable to open default camera";
@@ -41,10 +41,10 @@ void Processor::exec()
             qDebug() << "ERROR! blank frame grabbed";
             break;
         }
-        currFrame = m_detector.detect(currFrame);
 
-        cv::imshow("Output", currFrame);
-
+        m_detector.detect(currFrame);
+        //        cv::imshow("Output", currFrame);
+        //        cv::waitKey(0);
         QImage qImgFrame = QImage((uchar*)currFrame.data, currFrame.cols, currFrame.rows, currFrame.step, QImage::Format_BGR888);
         emit showCurrentFrame(qImgFrame);
     }

@@ -10,8 +10,9 @@ class Detector final
 public:
     Detector();
     ~Detector();
-    cv::Mat detect(cv::Mat currFrame);
+    void detect(cv::Mat &currFrame);
 private:
+    void clear();
     cv::HOGDescriptor m_hog;
     std::vector<cv::Rect> m_found;
     std::vector<cv::Rect> m_found_filtered;

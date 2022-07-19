@@ -34,6 +34,8 @@ LIBS += -L../opencv/bin -L../opencv/lib -lopencv_core411 \
 INCLUDEPATH += ../opencv/include
 
 
+
+
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin
 else: unix:!android: target.path = /opt/$${TARGET}/bin

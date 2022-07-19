@@ -1,4 +1,5 @@
 #include "mainwindow.h"
+#include <QDebug>
 #include "ui_mainwindow.h"
 
 MainWindow::MainWindow(QWidget *parent)
@@ -16,6 +17,7 @@ MainWindow::~MainWindow()
 
 void MainWindow::onShowCurrentFrame(QImage frame)
 {
+
     setCurrFrame(frame);
     update();
 }
@@ -24,6 +26,7 @@ void MainWindow::paintEvent(QPaintEvent *)
 {
     QPainter painter(this);
     painter.drawImage(0,0, currFrame().scaled(this->size()));
+    qDebug() << "Widget repainted with recieved image";
 }
 
 const QImage &MainWindow::currFrame() const
