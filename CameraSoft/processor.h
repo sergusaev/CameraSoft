@@ -16,11 +16,13 @@ public:
     ~Processor();
     void exec();
 
-
+public slots:
+    void onCameIn();
+    void onWentOut();
 signals:
     void showCurrentFrame(QImage frame);
-    void incoming(int count);
-    void outgoing(int count);
+    void incoming();
+    void outgoing();
 
 private:
    Counter m_counter;

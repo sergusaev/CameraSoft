@@ -2,6 +2,13 @@
 #include <QDebug>
 
 
+Counter::Counter()
+{
+    m_in = 0;
+    m_out = 0;
+    m_inside = 0;
+}
+
 Counter::~Counter()
 {
 
@@ -37,18 +44,22 @@ void Counter::setInside(int newInside)
     m_inside = newInside;
 }
 
-void Counter::onIncoming(int count)
+void Counter::onIncoming()
 {
-    setIn(in()+ count);
-    setInside(inside() + count);
+    setIn(in() + 1);
+    setInside(inside() + 1);
+    qDebug() << "Incoming person!";
+
 }
 
-void Counter::onOutgoing(int count)
+void Counter::onOutgoing()
 {
-    if(inside() < count) {
+    if(inside() < 1) {
         qDebug() << "Oops! Unexistant person outgoing...";
         return;
     }
-    setIn (inside() - count);
-    setInside(inside() - count);
+    setOut (out() + 1);
+
+    setInside(inside() - 1);
+    qDebug() << "Outgoing person!";
 }

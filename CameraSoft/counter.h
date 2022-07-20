@@ -7,7 +7,7 @@ class Counter final : public QObject
 {
     Q_OBJECT
 public:
-    Counter() = default;
+    Counter();
     ~Counter();
 
     int in() const;
@@ -19,9 +19,10 @@ public:
     int inside() const;
     void setInside(int newInside);
 
+
 public slots:
-    void onIncoming(int count);
-    void onOutgoing(int count);
+    void onIncoming();
+    void onOutgoing();
 
 
 private:

@@ -24,15 +24,28 @@ HEADERS += \
 FORMS += \
     mainwindow.ui
 
-LIBS += -L../opencv/bin -L../opencv/lib -lopencv_core411 \
-                                        -lopencv_videoio411   \
-                                        -lopencv_highgui411   \
-                                        -lopencv_objdetect411 \
-                                        -lopencv_imgproc411   \
-                                        -lopencv_tracking411
-
 INCLUDEPATH += ../opencv/include
 
+# OpenCV
+OCV_LIB = \
+    core \
+    highgui \
+    imgproc \
+    objdetect \
+    videoio \
+    tracking
+
+LIBS += -L../opencv/bin -L../opencv/lib
+
+for(ocv_name, OCV_LIB) {
+    file_name = opencv_$${ocv_name}411
+  CONFIG(debug, debug|release) {
+    LIBS += -l$${file_name}d
+  }
+  CONFIG(release, debug|release) {
+    LIBS += -l$${file_name}
+  }
+}
 
 
 
