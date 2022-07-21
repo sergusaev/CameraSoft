@@ -10,6 +10,8 @@
 
 
 Processor::Processor()
+    :m_counter()
+    ,m_detector()
 {
     QObject::connect(this, SIGNAL(incoming()), &m_counter, SLOT(onIncoming()));
     QObject::connect(this, SIGNAL(outgoing()), &m_counter, SLOT(onOutgoing()));
@@ -40,9 +42,13 @@ void Processor::exec()
     }
 
     qDebug() << "Start transmitting";
+
+#ifdef DEBUG_OUTPUT
     int frameWidth =  cap.get(cv::CAP_PROP_FRAME_WIDTH);
     int frameHeight =  cap.get(cv::CAP_PROP_FRAME_HEIGHT);
     qDebug() << "Size:" << frameWidth << "x" << frameHeight;
+#endif
+
 
     while (cap.read(currFrame))
     {
@@ -60,8 +66,8 @@ void Processor::exec()
                     textColor,
                     textThickness
                     );
-        //        cv::imshow("Output", currFrame);
-        //        cv::waitKey(0);
+//                cv::imshow("Output", currFrame);
+//                cv::waitKey(0);
         QImage qImgFrame = QImage((uchar*)currFrame.data, currFrame.cols, currFrame.rows, currFrame.step, QImage::Format_BGR888);
         emit showCurrentFrame(qImgFrame);
     }

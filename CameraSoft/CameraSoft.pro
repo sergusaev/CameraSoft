@@ -33,7 +33,7 @@ OCV_LIB = \
     imgproc \
     objdetect \
     videoio \
-    tracking
+    dnn
 
 LIBS += -L../opencv/bin -L../opencv/lib
 
@@ -47,7 +47,7 @@ for(ocv_name, OCV_LIB) {
   }
 }
 
-
+DEFINES += DEBUG_OUTPUT
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin

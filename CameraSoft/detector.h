@@ -7,6 +7,7 @@
 #include <opencv2/imgproc.hpp>
 #include <opencv2/tracking.hpp>
 #include <opencv2/highgui.hpp>
+#include <opencv2/dnn.hpp>
 #include <vector>
 #include <list>
 
@@ -22,12 +23,16 @@ signals:
     void cameIn();
     void wentOut();
 private:
+
     class DetectedPerson;
-    cv::HOGDescriptor m_hog;
-    std::vector<cv::Rect> m_found;
-    std::vector<double> m_weights;
-    std::list<cv::Rect> m_found_filtered;
-    std::list<DetectedPerson> m_detectedPeople;
+    cv::dnn::Net m_net;
+    std::vector<cv::Rect> m_detections;                 //all detected rects
+    std::vector<float> m_weights;                       //weights of all detected rects
+    std::list<cv::Rect> m_detectionsFiltered;           //list of detected rects filtered via NMS
+    std::vector<int> m_filteredRectsIndicies;           //indexes of filtered rects in vector of all rects
+    std::list<DetectedPerson> m_detectedPeople;   
+    std::vector<std::string> m_classList;               //vector of names of object classes forYOLO
+    std::vector<int> m_classIDs;
 
     void clear();
 };
