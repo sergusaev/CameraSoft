@@ -69,14 +69,15 @@ Detector::Detector()
                    "tvmonitor", "laptop", "mouse", "remote", "keyboard", "cell phone", "microwave",
                    "oven", "toaster", "sink", "refrigerator", "book", "clock", "vase", "scissors",
                    "teddy bear", "hair drier", "toothbrush" };
+
     m_net = cv::dnn::readNet("../CameraSoft/YOLOv5s.onnx");
     std::vector<std::pair<cv::dnn::Backend, cv::dnn::Target>> backends = cv::dnn::getAvailableBackends();
         for(const auto& backend : backends)
         {
-            if (backend.second == cv::dnn::DNN_TARGET_OPENCL)
+            if (backend.second == cv::dnn::DNN_TARGET_CUDA)
             {
-//                m_net.setPreferableBackend(backend.first);
-//                m_net.setPreferableTarget(backend.second);
+                m_net.setPreferableBackend(backend.first);
+                m_net.setPreferableTarget(backend.second);
             }
         }
 

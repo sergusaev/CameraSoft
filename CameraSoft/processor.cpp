@@ -36,7 +36,7 @@ void Processor::exec()
 {
     cv::Mat currFrame;
     cv::VideoCapture cap;
-    cap.open(/*"../CameraSoft/test_video_sample_4.mp4"*/0);
+    cap.open(/*"../CameraSoft/video_2022-07-23_17-06-42.mp4"*/0);
 
     if (!cap.isOpened()) {
         qDebug() << "ERROR! Unable to open default camera";
