@@ -1,10 +1,12 @@
 #include "detector.h"
+#include <QCoreApplication>
 #include <QDebug>
 #include <fstream>
+#include <QFile>
 
 // Constants for detections
 const float INPUT_WIDTH = 640.0;
-const float INPUT_HEIGHT = 480.0;
+const float INPUT_HEIGHT = 640.0;
 const float SCORE_THRESHOLD = 0.5;
 const float NMS_THRESHOLD = 0.45;
 const float CONFIDENCE_THRESHOLD = 0.45;
@@ -17,10 +19,10 @@ const int FONT_FACE = cv::FONT_HERSHEY_SIMPLEX;
 const int THICKNESS = 1;
 
 // Colors for detections
-cv::Scalar BLACK = cvScalar(0,0,0);
-cv::Scalar BLUE = cvScalar(255, 178, 50);
-cv::Scalar YELLOW = cvScalar(0, 255, 255);
-cv::Scalar RED = cvScalar(0,0,255);
+cv::Scalar BLACK = cv::Scalar(0,0,0);
+cv::Scalar BLUE = cv::Scalar(255, 178, 50);
+cv::Scalar YELLOW = cv::Scalar(0, 255, 255);
+cv::Scalar RED = cv::Scalar(0,0,255);
 
 
 
@@ -55,14 +57,29 @@ Detector::DetectedPerson::~DetectedPerson()
 }
 
 Detector::Detector()
-{
-    m_net = cv::dnn::readNet(/*"../CameraSoft/YOLOv5s.onnx"*/"C:/Projects/CameraSoft/CameraSoft/YOLOv5s.onnx");
-    std::ifstream ifs("C:/Projects/CameraSoft/CameraSoft/coco.names");
-    std::string line;
-    while (getline(ifs, line))
-    {
-        m_classList.push_back(line);
-    }
+{   
+    m_classList = {"person", "bicycle", "car", "motorbike", "aeroplane","bus", "train", "truck",
+                   "boat", "traffic light", "fire hydrant", "stop sign", "parking meter", "bench",
+                   "bird", "cat", "dog", "horse", "sheep", "cow", "elephant", "bear", "zebra", "giraffe",
+                   "backpack", "umbrella", "handbag", "tie", "suitcase", "frisbee", "skis", "snowboard",
+                   "sports ball", "kite", "baseball bat", "baseball glove", "skateboard", "surfboard",
+                   "tennis racket", "bottle", "wine glass", "cup", "fork", "knife", "spoon", "bowl",
+                   "banana", "apple", "sandwich", "orange", "broccoli", "carrot", "hot dog", "pizza",
+                   "donut", "cake", "chair", "sofa", "pottedplant", "bed", "diningtable", "toilet",
+                   "tvmonitor", "laptop", "mouse", "remote", "keyboard", "cell phone", "microwave",
+                   "oven", "toaster", "sink", "refrigerator", "book", "clock", "vase", "scissors",
+                   "teddy bear", "hair drier", "toothbrush" };
+    m_net = cv::dnn::readNet("../CameraSoft/YOLOv5s.onnx");
+    std::vector<std::pair<cv::dnn::Backend, cv::dnn::Target>> backends = cv::dnn::getAvailableBackends();
+        for(const auto& backend : backends)
+        {
+            if (backend.second == cv::dnn::DNN_TARGET_OPENCL)
+            {
+//                m_net.setPreferableBackend(backend.first);
+//                m_net.setPreferableTarget(backend.second);
+            }
+        }
+
 }
 
 Detector::~Detector()
@@ -153,7 +170,8 @@ std::vector<cv::Mat> preProcess(cv::Mat &inputFrame, cv::dnn::Net &net)
 
     // Forward propagate.
     std::vector<cv::Mat> outputs;
-    net.forward(outputs, net.getUnconnectedOutLayersNames());
+//    net.forward(outputs, net.getUnconnectedOutLayersNames());
+    net.forward(outputs);
     return outputs;
 }
 
@@ -245,7 +263,7 @@ void Detector::detect(cv::Mat &currFrame)
         }
         if(!personFound) {
             it->m_failedDetectionsCount++;
-            if(it->m_failedDetectionsCount > 5) {
+            if(it->m_failedDetectionsCount > 10) {
                 if(locatedOnTheLeft(it->m_initialRect, it->m_currRect)) {
                     emit cameIn();
                 } else {

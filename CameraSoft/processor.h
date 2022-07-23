@@ -20,7 +20,7 @@ public slots:
     void onCameIn();
     void onWentOut();
 signals:
-    void showCurrentFrame(QImage frame);
+    void showCurrentFrame(cv::Mat frame);
     void incoming();
     void outgoing();
 

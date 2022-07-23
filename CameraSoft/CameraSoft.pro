@@ -10,6 +10,7 @@ CONFIG += c++11
 
 SOURCES += \
     counter.cpp \
+    cvimagewidget.cpp \
     detector.cpp \
     main.cpp \
     mainwindow.cpp \
@@ -17,6 +18,7 @@ SOURCES += \
 
 HEADERS += \
     counter.h \
+    cvimagewidget.h \
     detector.h \
     mainwindow.h \
     processor.h
@@ -38,7 +40,7 @@ OCV_LIB = \
 LIBS += -L../opencv/bin -L../opencv/lib
 
 for(ocv_name, OCV_LIB) {
-    file_name = opencv_$${ocv_name}411
+    file_name = opencv_$${ocv_name}460
   CONFIG(debug, debug|release) {
     LIBS += -l$${file_name}d
   }
@@ -47,7 +49,7 @@ for(ocv_name, OCV_LIB) {
   }
 }
 
-DEFINES += DEBUG_OUTPUT
+#DEFINES += DEBUG_OUTPUT
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin

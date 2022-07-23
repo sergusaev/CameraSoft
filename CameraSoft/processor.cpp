@@ -8,6 +8,12 @@
 #include <string>
 #include "processor.h"
 
+//Constants for text
+const cv::Point  BOTTOM_LEFT (50, 440);
+const cv::Scalar TEXT_COLOUR (255, 255, 0);
+const int FONT_FACE = cv::FONT_HERSHEY_COMPLEX;
+const double FONT_SCALE = 0.8;
+const int THICKNESS = 1;
 
 Processor::Processor()
     :m_counter()
@@ -24,11 +30,7 @@ Processor::~Processor()
 
 }
 
-static cv::Point  bottomLeft (50, 40);         // a point for botom-left corner of counter text on a frame
-static cv::Scalar textColor (255, 255, 0);      // a color for counter text
-static int fontFace = 4;                        // is equal to FONT_HERSHEY_COMPLEX  (see cv::HersheyFonts)
-static double fontScale = 0.8;                  // Font scale factor that is multiplied by the font-specific base size.
-static int textThickness = 1;                   // thickness for text
+
 
 void Processor::exec()
 {
@@ -60,16 +62,16 @@ void Processor::exec()
         m_detector.detect(currFrame);
         cv::putText(currFrame,
                     "In: "+std::to_string(m_counter.in())+"  Out: "+std::to_string(m_counter.out())+"  Inside:"+std::to_string(m_counter.inside()),
-                    bottomLeft,
-                    fontFace,
-                    fontScale,
-                    textColor,
-                    textThickness
+                    BOTTOM_LEFT,
+                    FONT_FACE,
+                    FONT_SCALE,
+                    TEXT_COLOUR,
+                    THICKNESS
                     );
 //                cv::imshow("Output", currFrame);
 //                cv::waitKey(0);
-        QImage qImgFrame = QImage((uchar*)currFrame.data, currFrame.cols, currFrame.rows, currFrame.step, QImage::Format_BGR888);
-        emit showCurrentFrame(qImgFrame);
+//        QImage qImgFrame = QImage((uchar*)currFrame.data, currFrame.cols, currFrame.rows, currFrame.step, QImage::Format_BGR888);
+        emit showCurrentFrame(currFrame);
     }
 }
 

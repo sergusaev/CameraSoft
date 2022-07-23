@@ -15,24 +15,25 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
-void MainWindow::onShowCurrentFrame(QImage frame)
+void MainWindow::onShowCurrentFrame(cv::Mat frame)
 {
-    if(frame.isNull()) {
+    if(frame.empty()) {
         qDebug() << "Recieved image is empty";
         return;
     }
-    setCurrFrame(frame);
-    update();
+//    setCurrFrame(frame);
+    ui->image->showImage(frame);
+//    update();
 }
 
-void MainWindow::paintEvent(QPaintEvent *)
-{
-    QPainter painter(this);
-    painter.drawImage(0,0, currFrame().scaled(this->size()));
-#ifdef TIMING_OUTPUT
-    qDebug() << "Widget repainted with recieved image";
-#endif
-}
+//void MainWindow::paintEvent(QPaintEvent *)
+//{
+//    QPainter painter(this);
+//    painter.drawImage(0,0, currFrame().scaled(this->size()));
+//#ifdef TIMING_OUTPUT
+//    qDebug() << "Widget repainted with recieved image";
+//#endif
+//}
 
 const QImage &MainWindow::currFrame() const
 {

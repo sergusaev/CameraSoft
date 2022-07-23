@@ -4,6 +4,7 @@
 #include <QMainWindow>
 #include <QImage>
 #include <QPainter>
+#include <opencv2/core/mat.hpp>
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -22,9 +23,10 @@ public:
 
 
 public slots:
-     void onShowCurrentFrame(QImage frame);
-protected:
-    void paintEvent(QPaintEvent *);
+//     void onShowCurrentFrame(QImage frame);
+       void onShowCurrentFrame(cv::Mat frame);
+//protected:
+//    void paintEvent(QPaintEvent *);
 
 private:
     Ui::MainWindow *ui;

@@ -8,15 +8,19 @@
 #include "mainwindow.h"
 #include "processor.h"
 
+Q_DECLARE_METATYPE(cv::Mat)
+
 int main(int argc, char *argv[])
 {
+
     //tweaking the debug output
     qSetMessagePattern("%{time h:mm:ss.zzz} %{if-category} %{category}: %{endif}%{if-debug} %{function} %{endif} %{message}");
+    qRegisterMetaType<cv::Mat>("cv::Mat");
     QApplication a(argc, argv);
     MainWindow w;
     QThread *transmissionThread = QThread::create([&](){
         Processor processor;
-        QObject::connect(&processor, SIGNAL(showCurrentFrame(QImage)), &w, SLOT(onShowCurrentFrame(QImage)));
+        QObject::connect(&processor, SIGNAL(showCurrentFrame(cv::Mat)), &w, SLOT(onShowCurrentFrame(cv::Mat)));
         processor.exec();
     });
     QObject::connect(transmissionThread, SIGNAL(finished()), transmissionThread, SLOT(deleteLater()));
