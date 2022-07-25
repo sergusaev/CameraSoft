@@ -1,17 +1,17 @@
 #include "detector.h"
 #include <QCoreApplication>
 #include <QDebug>
-#include <fstream>
 #include <QFile>
+#include <QDateTime>
 
 // Constants for detections
 const float INPUT_WIDTH = 640.0;
 const float INPUT_HEIGHT = 640.0;
 const float SCORE_THRESHOLD = 0.5;
 const float NMS_THRESHOLD = 0.45;
-const float CONFIDENCE_THRESHOLD = 0.45;
-const double SAME_PERSON_OVERLAP_THRESHOLD = 0.8;   /*coefficient to detect whether the person is same by comparing areas of bounding
-                                                    rects on different iterations*/
+const float CONFIDENCE_THRESHOLD = 0.65;
+const double SAME_PERSON_OVERLAP_THRESHOLD = 0.8;   //coefficient of union of two rects that might be one person
+
 
 // Text parameters for detections
 const double FONT_SCALE = 0.7;
@@ -30,23 +30,25 @@ class Detector::DetectedPerson final
 {
 public:
     DetectedPerson();
-    DetectedPerson(const cv::Rect &initialRect);
+    DetectedPerson(const cv::Rect &initialRect, float weight);
     ~DetectedPerson();
     cv::Rect m_initialRect;
     cv::Rect m_currRect;
-    int m_failedDetectionsCount;
+    float m_weight;
+    quint64 m_detectionTimePoint;
 };
 
 Detector::DetectedPerson::DetectedPerson()
 {
-    m_failedDetectionsCount = 0;
+    m_weight  = 0;
 }
 
-Detector::DetectedPerson::DetectedPerson(const cv::Rect &initialRect)
+Detector::DetectedPerson::DetectedPerson(const cv::Rect &initialRect, float weight)
 {
-    m_initialRect = initialRect;
-    m_currRect = initialRect;
-    m_failedDetectionsCount = 0;
+    m_initialRect = std::move(initialRect);
+    m_currRect = m_initialRect;
+    m_detectionTimePoint = QDateTime::currentMSecsSinceEpoch();
+    m_weight  = weight;
 }
 
 
@@ -72,14 +74,14 @@ Detector::Detector()
 
     m_net = cv::dnn::readNet("../CameraSoft/YOLOv5s.onnx");
     std::vector<std::pair<cv::dnn::Backend, cv::dnn::Target>> backends = cv::dnn::getAvailableBackends();
-        for(const auto& backend : backends)
+    for(const auto& backend : backends)
+    {
+        if (backend.second == cv::dnn::DNN_TARGET_CUDA)
         {
-            if (backend.second == cv::dnn::DNN_TARGET_CUDA)
-            {
-                m_net.setPreferableBackend(backend.first);
-                m_net.setPreferableTarget(backend.second);
-            }
+            m_net.setPreferableBackend(backend.first);
+            m_net.setPreferableTarget(backend.second);
         }
+    }
 
 }
 
@@ -95,7 +97,8 @@ bool isSamePerson(const cv::Rect &first, const cv::Rect &second)
     qDebug() << "Area of union of detected bounding rects:" << (first & second).area();
     qDebug() << "Criteria of person identity: not less than" << qMin(first.area(), second.area()) * SAME_PERSON_OVERLAP_THRESHOLD;
 #endif
-    return (first & second).area() >= qMin(first.area(), second.area()) * SAME_PERSON_OVERLAP_THRESHOLD;
+    return (first & second).area() >= qMin(first.area(), second.area()) * SAME_PERSON_OVERLAP_THRESHOLD
+            || qAbs((first.tl().x + first.width/2) - (second.tl().x + second.width/2)) <= qMin(first.width, second.width) / 2;
 }
 
 
@@ -119,6 +122,7 @@ bool locatedOnTheLeft(const cv::Rect &lhs, const cv::Rect &rhs)
     return lhs.tl().x + lhs.width / 2 < rhs.tl().x + rhs.width / 2;
 }
 
+
 //The function to annotate the class names anchored to the top left corner of the bounding box.
 void drawLabel(cv::Mat& inputFrame, std::string label, int left, int top)
 {
@@ -140,9 +144,7 @@ void drawLabel(cv::Mat& inputFrame, std::string label, int left, int top)
 void drawBoundingRect(cv::Mat& inputFrame,
                       const std::vector<std::string> &className,
                       cv::Rect &box,
-                      int idx,
-                      std::vector<float> &confidences,
-                      std::vector<int> &classIDs)
+                      float weight)
 {
     int left = box.x;
     int top = box.y;
@@ -153,8 +155,8 @@ void drawBoundingRect(cv::Mat& inputFrame,
     rectangle(inputFrame, cv::Point(left, top), cv::Point(left + width, top + height), BLUE, THICKNESS * 3);
 
     // Get the label for the class name and its confidence.
-    std::string label = cv::format("%.2f", confidences[idx]);
-    label = className[classIDs[idx]] + ":" + label;
+    std::string label = cv::format("%.2f", weight);
+    label = className[0] + ":" + label;
 
     // Draw class labels
     drawLabel(inputFrame, label, left, top);
@@ -171,18 +173,16 @@ std::vector<cv::Mat> preProcess(cv::Mat &inputFrame, cv::dnn::Net &net)
 
     // Forward propagate.
     std::vector<cv::Mat> outputs;
-//    net.forward(outputs, net.getUnconnectedOutLayersNames());
     net.forward(outputs);
     return outputs;
 }
 
-//the function to detection rectangles
+//the function to detection rectangles. The purpose is to detect people so only rects of class "person" will be stored
 void postProcess(cv::Mat &inputFrame,
                  std::vector<cv::Mat> &outputs,
                  const std::vector<std::string> &className,
                  std::vector<cv::Rect> &boxes,
-                 std::vector<float> &confidences,
-                 std::vector<int> &classIDs)
+                 std::vector<float> &confidences)
 {
 
     // Resizing factor
@@ -209,12 +209,11 @@ void postProcess(cv::Mat &inputFrame,
             cv::Point classID;
             double maxClassScore;
             cv::minMaxLoc(scores, 0, &maxClassScore, 0, &classID);
-            // Continue if the class score is above the threshold.
-            if (maxClassScore > SCORE_THRESHOLD)
+            // Continue if the class score is above the threshold and detected object is person (classID.x == 0, first index in m_classList).
+            if (maxClassScore > SCORE_THRESHOLD && classID.x == 0)
             {
                 // Store class ID and confidence in the pre-defined respective vectors.
                 confidences.push_back(confidence);
-                classIDs.push_back(classID.x);
                 // Center.
                 float cx = data[0];
                 float cy = data[1];
@@ -238,24 +237,26 @@ void postProcess(cv::Mat &inputFrame,
 
 
 
-void Detector::detect(cv::Mat &currFrame)
+QString Detector::detect(cv::Mat &currFrame)
 {
     // Process the image
     std::vector<cv::Mat> detections;
     detections = preProcess(currFrame, m_net);
-    postProcess(currFrame, detections, m_classList, m_detections, m_weights, m_classIDs);
+    postProcess(currFrame, detections, m_classList, m_detections, m_weights);
     filterOverlappingRects(m_detections, m_detectionsFiltered, m_weights, m_filteredRectsIndicies);
-    int idx = 0;        //a variable for idx of checked rect for further drawing of label
     for(auto it = m_detectedPeople.begin(); it !=  m_detectedPeople.end(); ) {
         bool personFound = false;
+        //a variable to represent index of current element of m_detectionsFiltered in m_filteredRectIndicies (to get current element weight)
+        int idx = 0;
         for(auto iter = m_detectionsFiltered.begin(); iter != m_detectionsFiltered.end();) {
-
             if(isSamePerson(*iter, it->m_currRect)) {
                 personFound = true;
-                it->m_failedDetectionsCount = 0;
                 it->m_currRect = *iter;
+                it->m_weight = m_weights[m_filteredRectsIndicies[idx]];
+                it->m_detectionTimePoint = QDateTime::currentMSecsSinceEpoch();
                 iter = m_detectionsFiltered.erase(iter);
-                idx++;  //increase idx in any case to provide valid object class name
+                m_filteredRectsIndicies[idx] = -1;
+                m_filteredRectsIndicies.erase(std::remove(m_filteredRectsIndicies.begin(), m_filteredRectsIndicies.end(), - 1));
                 break;
             } else {
                 iter = std::next(iter);
@@ -263,26 +264,29 @@ void Detector::detect(cv::Mat &currFrame)
             }
         }
         if(!personFound) {
-            it->m_failedDetectionsCount++;
-            if(it->m_failedDetectionsCount > 10) {
+            if((QDateTime::currentMSecsSinceEpoch() - it->m_detectionTimePoint) > 300) {
                 if(locatedOnTheLeft(it->m_initialRect, it->m_currRect)) {
-                    emit cameIn();
+                    if (it->m_currRect.br().x > 630) { //person bounding rect's right border is on right border of frame
+                        emit cameIn();
+                    }
                 } else {
-                    emit wentOut();
+                    if (it->m_currRect.tl().x  < 10) { //person bounding rect's left border is on left border of frame
+                        emit wentOut();
+                    }
                 }
                 it = m_detectedPeople.erase(it);
             }
         } else {
-            drawBoundingRect(currFrame, m_classList, it->m_currRect, idx, m_weights, m_classIDs);
+            drawBoundingRect(currFrame, m_classList, it->m_currRect, it->m_weight);
             it = std::next(it);
         }
 
     }
-
+    int idx = 0;
     for(auto it = m_detectionsFiltered.begin(); it != m_detectionsFiltered.end();it = std::next(it)) {
-        drawBoundingRect(currFrame, m_classList, *it, idx, m_weights, m_classIDs);
-        m_detectedPeople.push_back(DetectedPerson(*it));
-
+        m_detectedPeople.push_back(DetectedPerson(*it, m_weights[idx]));
+        drawBoundingRect(currFrame, m_classList, *it, m_weights[idx]);
+        idx++;
     }
 
     // Put efficiency information.
@@ -292,8 +296,9 @@ void Detector::detect(cv::Mat &currFrame)
     double freq = cv::getTickFrequency() / 1000;
     double t = m_net.getPerfProfile(layersTimes) / freq;
     std::string label = cv::format("Inference time : %.2f ms", t);
-    putText(currFrame, label, cv::Point(20, 40), FONT_FACE, FONT_SCALE, RED);
+    //    putText(currFrame, label, cv::Point(20, 40), FONT_FACE, FONT_SCALE, RED);
     clear();
+    return QString::fromStdString(label);
 }
 
 
@@ -303,7 +308,6 @@ void Detector::clear()
     m_detectionsFiltered.clear();
     m_weights.clear();
     m_filteredRectsIndicies.clear();
-    m_classIDs.clear();
 }
 
 

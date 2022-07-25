@@ -36,7 +36,7 @@ void Processor::exec()
 {
     cv::Mat currFrame;
     cv::VideoCapture cap;
-    cap.open(/*"../CameraSoft/video_2022-07-23_17-06-42.mp4"*/0);
+    cap.open("../CameraSoft/test_video_sample_2.mp4");
 
     if (!cap.isOpened()) {
         qDebug() << "ERROR! Unable to open default camera";
@@ -59,19 +59,18 @@ void Processor::exec()
             break;
         }
 
-        m_detector.detect(currFrame);
-        cv::putText(currFrame,
-                    "In: "+std::to_string(m_counter.in())+"  Out: "+std::to_string(m_counter.out())+"  Inside:"+std::to_string(m_counter.inside()),
-                    BOTTOM_LEFT,
-                    FONT_FACE,
-                    FONT_SCALE,
-                    TEXT_COLOUR,
-                    THICKNESS
-                    );
-//                cv::imshow("Output", currFrame);
-//                cv::waitKey(0);
-//        QImage qImgFrame = QImage((uchar*)currFrame.data, currFrame.cols, currFrame.rows, currFrame.step, QImage::Format_BGR888);
+        QString inferenceStatus = m_detector.detect(currFrame);
+//        cv::putText(currFrame,
+//                    "In: "+std::to_string(m_counter.in())+"  Out: "+std::to_string(m_counter.out())+"  Inside:"+std::to_string(m_counter.inside()),
+//                    BOTTOM_LEFT,
+//                    FONT_FACE,
+//                    FONT_SCALE,
+//                    TEXT_COLOUR,
+//                    THICKNESS
+//                    );
         emit showCurrentFrame(currFrame);
+        emit showCurrentInferenceStatus(inferenceStatus);
+        emit showCurrentStatus("In: " + QString("%1").arg(m_counter.in())+"  Out: " + QString("%1").arg(m_counter.out())+"  Inside:" + QString("%1").arg(m_counter.inside()));
     }
 }
 

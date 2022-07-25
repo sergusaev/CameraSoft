@@ -17,20 +17,13 @@ class MainWindow : public QMainWindow
 public:
     MainWindow(QWidget *parent = nullptr);
     virtual ~MainWindow();
-    const QImage &currFrame() const;
-    void setCurrFrame(const QImage &newCurrFrame);
-
-
 
 public slots:
-//     void onShowCurrentFrame(QImage frame);
-       void onShowCurrentFrame(cv::Mat frame);
-//protected:
-//    void paintEvent(QPaintEvent *);
-
+    void onShowCurrentFrame(cv::Mat frame);
+    void onShowCurrentStatus(QString status);
+    void onShowCurrentInferenceStatus(QString status);
 private:
     Ui::MainWindow *ui;
-    QImage m_currFrame;
 
 
 };

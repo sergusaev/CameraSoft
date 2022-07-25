@@ -60,9 +60,11 @@ void CVImageWidget::paintEvent(QPaintEvent* /*event*/) {
     double scaleX = (double)imageArea.width() / m_qimage.width();
     double scaleY = (double)imageArea.height() / m_qimage.height();
 
-    if (scaleX > scaleY) imageArea.setWidth(m_qimage.width() * scaleY);
-    else imageArea.setHeight(m_qimage.height() * scaleX);
-
+    if (scaleX > scaleY) {
+        imageArea.setWidth(m_qimage.width() * scaleY);
+    } else  {
+        imageArea.setHeight(m_qimage.height() * scaleX);
+    }
     painter.drawImage(imageArea, m_qimage);
     painter.end();
 }

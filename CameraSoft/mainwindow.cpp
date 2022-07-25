@@ -1,5 +1,6 @@
 #include "mainwindow.h"
 #include <QDebug>
+#include <QLabel>
 #include "ui_mainwindow.h"
 
 MainWindow::MainWindow(QWidget *parent)
@@ -8,6 +9,10 @@ MainWindow::MainWindow(QWidget *parent)
 {
 
     ui->setupUi(this);
+//    QLabel *label = new QLabel("CounterStatus");
+//    ui->statusbar->addWidget(label);
+
+
 }
 
 MainWindow::~MainWindow()
@@ -21,27 +26,19 @@ void MainWindow::onShowCurrentFrame(cv::Mat frame)
         qDebug() << "Recieved image is empty";
         return;
     }
-//    setCurrFrame(frame);
+
     ui->image->showImage(frame);
-//    update();
 }
 
-//void MainWindow::paintEvent(QPaintEvent *)
-//{
-//    QPainter painter(this);
-//    painter.drawImage(0,0, currFrame().scaled(this->size()));
-//#ifdef TIMING_OUTPUT
-//    qDebug() << "Widget repainted with recieved image";
-//#endif
-//}
-
-const QImage &MainWindow::currFrame() const
+void MainWindow::onShowCurrentStatus(QString status)
 {
-    return m_currFrame;
+    ui->CounterStatus->setText(status);
+    //    ui->verticalLayout->hori->setText(status);
 }
 
-void MainWindow::setCurrFrame(const QImage &newCurrFrame)
+void MainWindow::onShowCurrentInferenceStatus(QString status)
 {
-    m_currFrame = newCurrFrame;
+    ui->InferenceStatus->setText(status);
 }
+
 
