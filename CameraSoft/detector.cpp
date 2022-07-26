@@ -35,22 +35,23 @@ public:
     cv::Rect m_initialRect;
     cv::Rect m_currRect;
     float m_weight;
-    //    quint64 m_detectionTimePoint;
-    int m_failedDetectionsCount;
+    quint64 m_detectionTimePoint;
+
 };
 
 Detector::DetectedPerson::DetectedPerson()
 {
     m_weight  = 0;
-    m_failedDetectionsCount = 0;
+    m_detectionTimePoint = QDateTime::currentMSecsSinceEpoch();
+
 }
 
 Detector::DetectedPerson::DetectedPerson(const cv::Rect &initialRect, float weight)
 {
     m_initialRect = std::move(initialRect);
     m_currRect = m_initialRect;
-    //    m_detectionTimePoint = QDateTime::currentMSecsSinceEpoch();
-    m_failedDetectionsCount = 0;
+    m_detectionTimePoint = QDateTime::currentMSecsSinceEpoch();
+
     m_weight  = weight;
 }
 
@@ -256,8 +257,7 @@ QString Detector::detect(cv::Mat &currFrame)
                 personFound = true;
                 it->m_currRect = *iter;
                 it->m_weight = m_weights[m_filteredRectsIndicies[idx]];
-                //                it->m_detectionTimePoint = QDateTime::currentMSecsSinceEpoch();
-                it->m_failedDetectionsCount = 0;
+                it->m_detectionTimePoint = QDateTime::currentMSecsSinceEpoch();
                 iter = m_detectionsFiltered.erase(iter);
                 m_filteredRectsIndicies[idx] = -1;
                 m_filteredRectsIndicies.erase(std::remove(m_filteredRectsIndicies.begin(), m_filteredRectsIndicies.end(), - 1));
@@ -268,9 +268,7 @@ QString Detector::detect(cv::Mat &currFrame)
             }
         }
         if(!personFound) {
-            //            if((QDateTime::currentMSecsSinceEpoch() - it->m_detectionTimePoint) > 200) {
-            it->m_failedDetectionsCount++;
-            if(it->m_failedDetectionsCount > 30) {
+            if((QDateTime::currentMSecsSinceEpoch() - it->m_detectionTimePoint) > 200) {
                 if(locatedOnTheLeft(it->m_initialRect, it->m_currRect)) {
                     if (it->m_currRect.br().x > 635) { //person bounding rect's right border is on right border of frame
                         emit cameIn();
