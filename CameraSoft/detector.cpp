@@ -7,10 +7,10 @@
 // Constants for detections
 const float INPUT_WIDTH = 640.0;
 const float INPUT_HEIGHT = 640.0;
-const float SCORE_THRESHOLD = 0.5;
+const float SCORE_THRESHOLD = 0.45;
 const float NMS_THRESHOLD = 0.45;
 const float CONFIDENCE_THRESHOLD = 0.65;
-const double SAME_PERSON_OVERLAP_THRESHOLD = 0.8;   //coefficient of union of two rects that might be one person
+const double SAME_PERSON_OVERLAP_THRESHOLD = 0.7;   //coefficient of union of two rects that might be one person
 
 
 // Text parameters for detections
@@ -35,19 +35,22 @@ public:
     cv::Rect m_initialRect;
     cv::Rect m_currRect;
     float m_weight;
-    quint64 m_detectionTimePoint;
+    //    quint64 m_detectionTimePoint;
+    int m_failedDetectionsCount;
 };
 
 Detector::DetectedPerson::DetectedPerson()
 {
     m_weight  = 0;
+    m_failedDetectionsCount = 0;
 }
 
 Detector::DetectedPerson::DetectedPerson(const cv::Rect &initialRect, float weight)
 {
     m_initialRect = std::move(initialRect);
     m_currRect = m_initialRect;
-    m_detectionTimePoint = QDateTime::currentMSecsSinceEpoch();
+    //    m_detectionTimePoint = QDateTime::currentMSecsSinceEpoch();
+    m_failedDetectionsCount = 0;
     m_weight  = weight;
 }
 
@@ -253,7 +256,8 @@ QString Detector::detect(cv::Mat &currFrame)
                 personFound = true;
                 it->m_currRect = *iter;
                 it->m_weight = m_weights[m_filteredRectsIndicies[idx]];
-                it->m_detectionTimePoint = QDateTime::currentMSecsSinceEpoch();
+                //                it->m_detectionTimePoint = QDateTime::currentMSecsSinceEpoch();
+                it->m_failedDetectionsCount = 0;
                 iter = m_detectionsFiltered.erase(iter);
                 m_filteredRectsIndicies[idx] = -1;
                 m_filteredRectsIndicies.erase(std::remove(m_filteredRectsIndicies.begin(), m_filteredRectsIndicies.end(), - 1));
@@ -264,13 +268,15 @@ QString Detector::detect(cv::Mat &currFrame)
             }
         }
         if(!personFound) {
-            if((QDateTime::currentMSecsSinceEpoch() - it->m_detectionTimePoint) > 300) {
+            //            if((QDateTime::currentMSecsSinceEpoch() - it->m_detectionTimePoint) > 200) {
+            it->m_failedDetectionsCount++;
+            if(it->m_failedDetectionsCount > 30) {
                 if(locatedOnTheLeft(it->m_initialRect, it->m_currRect)) {
-                    if (it->m_currRect.br().x > 630) { //person bounding rect's right border is on right border of frame
+                    if (it->m_currRect.br().x > 635) { //person bounding rect's right border is on right border of frame
                         emit cameIn();
                     }
                 } else {
-                    if (it->m_currRect.tl().x  < 10) { //person bounding rect's left border is on left border of frame
+                    if (it->m_currRect.tl().x  < 5) { //person bounding rect's left border is on left border of frame
                         emit wentOut();
                     }
                 }

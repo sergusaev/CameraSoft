@@ -21,7 +21,7 @@ public slots:
     void onWentOut();
 signals:
     void showCurrentFrame(cv::Mat frame);
-    void showCurrentStatus(QString status);
+    void showCurrentCounterStatus(QString status);
     void showCurrentInferenceStatus(QString inferenceStatus);
     void incoming();
     void outgoing();

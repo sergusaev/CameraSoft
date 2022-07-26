@@ -21,7 +21,7 @@ int main(int argc, char *argv[])
     QThread *transmissionThread = QThread::create([&](){
         Processor processor;
         QObject::connect(&processor, SIGNAL(showCurrentFrame(cv::Mat)), &w, SLOT(onShowCurrentFrame(cv::Mat)));
-        QObject::connect(&processor, SIGNAL(showCurrentStatus(QString)), &w, SLOT(onShowCurrentStatus(QString)));
+        QObject::connect(&processor, SIGNAL(showCurrentCounterStatus(QString)), &w, SLOT(onShowCurrentCounterStatus(QString)));
         QObject::connect(&processor, SIGNAL(showCurrentInferenceStatus(QString)), &w, SLOT(onShowCurrentInferenceStatus(QString)));
         processor.exec();
     });

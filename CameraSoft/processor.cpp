@@ -9,11 +9,8 @@
 #include "processor.h"
 
 //Constants for text
-const cv::Point  BOTTOM_LEFT (50, 440);
-const cv::Scalar TEXT_COLOUR (255, 255, 0);
-const int FONT_FACE = cv::FONT_HERSHEY_COMPLEX;
-const double FONT_SCALE = 0.8;
-const int THICKNESS = 1;
+//const cv::Point  BOTTOM_LEFT (50, 440);
+//const cv::Scalar TEXT_COLOUR (255, 255, 0);
 
 Processor::Processor()
     :m_counter()
@@ -36,7 +33,7 @@ void Processor::exec()
 {
     cv::Mat currFrame;
     cv::VideoCapture cap;
-    cap.open("../CameraSoft/test_video_sample_2.mp4");
+    cap.open("../CameraSoft/test_video_sample_4.mp4");
 
     if (!cap.isOpened()) {
         qDebug() << "ERROR! Unable to open default camera";
@@ -60,17 +57,9 @@ void Processor::exec()
         }
 
         QString inferenceStatus = m_detector.detect(currFrame);
-//        cv::putText(currFrame,
-//                    "In: "+std::to_string(m_counter.in())+"  Out: "+std::to_string(m_counter.out())+"  Inside:"+std::to_string(m_counter.inside()),
-//                    BOTTOM_LEFT,
-//                    FONT_FACE,
-//                    FONT_SCALE,
-//                    TEXT_COLOUR,
-//                    THICKNESS
-//                    );
         emit showCurrentFrame(currFrame);
         emit showCurrentInferenceStatus(inferenceStatus);
-        emit showCurrentStatus("In: " + QString("%1").arg(m_counter.in())+"  Out: " + QString("%1").arg(m_counter.out())+"  Inside:" + QString("%1").arg(m_counter.inside()));
+        emit showCurrentCounterStatus("In: " + QString("%1").arg(m_counter.in())+"  Out: " + QString("%1").arg(m_counter.out())+"  Inside:" + QString("%1").arg(m_counter.inside()));
     }
 }
 

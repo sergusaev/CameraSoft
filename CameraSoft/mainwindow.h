@@ -20,7 +20,7 @@ public:
 
 public slots:
     void onShowCurrentFrame(cv::Mat frame);
-    void onShowCurrentStatus(QString status);
+    void onShowCurrentCounterStatus(QString status);
     void onShowCurrentInferenceStatus(QString status);
 private:
     Ui::MainWindow *ui;

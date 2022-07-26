@@ -22,7 +22,7 @@ void CVImageWidget::showImage(const cv::Mat& image) {
     if (image.empty())
     {
         m_tmp = image;
-        m_qimage = QImage();
+        m_qimage = QImage("../CameraSoft/pics/hourglass.png");
     }
     else
     {
