@@ -30,7 +30,7 @@ class Detector::DetectedPerson final
 {
 public:
     DetectedPerson();
-    DetectedPerson(const cv::Rect &initialRect, float weight);
+    DetectedPerson(const cv::Rect &initialRect, float weight, qint64 currTimePoint);
     ~DetectedPerson();
     cv::Rect m_initialRect;
     cv::Rect m_currRect;
@@ -42,16 +42,15 @@ public:
 Detector::DetectedPerson::DetectedPerson()
 {
     m_weight  = 0;
-    m_detectionTimePoint = QDateTime::currentMSecsSinceEpoch();
+    m_detectionTimePoint = 0;
 
 }
 
-Detector::DetectedPerson::DetectedPerson(const cv::Rect &initialRect, float weight)
+Detector::DetectedPerson::DetectedPerson(const cv::Rect &initialRect, float weight, qint64 currTimePoint)
 {
     m_initialRect = std::move(initialRect);
     m_currRect = m_initialRect;
-    m_detectionTimePoint = QDateTime::currentMSecsSinceEpoch();
-
+    m_detectionTimePoint = currTimePoint;
     m_weight  = weight;
 }
 
@@ -77,6 +76,8 @@ Detector::Detector()
                    "teddy bear", "hair drier", "toothbrush" };
 
     m_net = cv::dnn::readNet("../CameraSoft/YOLOv5s.onnx");
+    m_lastIncomingTimePoint = 0;
+    m_lastOutgoingTimePoint = 0;
     std::vector<std::pair<cv::dnn::Backend, cv::dnn::Target>> backends = cv::dnn::getAvailableBackends();
     for(const auto& backend : backends)
     {
@@ -241,8 +242,9 @@ void postProcess(cv::Mat &inputFrame,
 
 
 
-QString Detector::detect(cv::Mat &currFrame)
+QString Detector::detect(cv::Mat &currFrame, qint64 currTimePoint)
 {
+
     // Process the image
     std::vector<cv::Mat> detections;
     detections = preProcess(currFrame, m_net);
@@ -257,7 +259,7 @@ QString Detector::detect(cv::Mat &currFrame)
                 personFound = true;
                 it->m_currRect = *iter;
                 it->m_weight = m_weights[m_filteredRectsIndicies[idx]];
-                it->m_detectionTimePoint = QDateTime::currentMSecsSinceEpoch();
+                it->m_detectionTimePoint = currTimePoint;
                 iter = m_detectionsFiltered.erase(iter);
                 m_filteredRectsIndicies[idx] = -1;
                 m_filteredRectsIndicies.erase(std::remove(m_filteredRectsIndicies.begin(), m_filteredRectsIndicies.end(), - 1));
@@ -268,29 +270,36 @@ QString Detector::detect(cv::Mat &currFrame)
             }
         }
         if(!personFound) {
-            if((QDateTime::currentMSecsSinceEpoch() - it->m_detectionTimePoint) > 200) {
+            if((currTimePoint - it->m_detectionTimePoint) > 10) {
                 if(locatedOnTheLeft(it->m_initialRect, it->m_currRect)) {
                     if (it->m_currRect.br().x > 635) { //person bounding rect's right border is on right border of frame
                         emit cameIn();
+                        m_lastIncomingTimePoint = currTimePoint;
                     }
                 } else {
                     if (it->m_currRect.tl().x  < 5) { //person bounding rect's left border is on left border of frame
                         emit wentOut();
+                        m_lastOutgoingTimePoint = currTimePoint;
                     }
                 }
-                it = m_detectedPeople.erase(it);
             }
+            it = m_detectedPeople.erase(it);
         } else {
             drawBoundingRect(currFrame, m_classList, it->m_currRect, it->m_weight);
             it = std::next(it);
         }
 
+
     }
     int idx = 0;
     for(auto it = m_detectionsFiltered.begin(); it != m_detectionsFiltered.end();it = std::next(it)) {
-        m_detectedPeople.push_back(DetectedPerson(*it, m_weights[idx]));
-        drawBoundingRect(currFrame, m_classList, *it, m_weights[idx]);
-        idx++;
+        bool duplicateOutgoing = it->x <= 5 && currTimePoint - m_lastOutgoingTimePoint < 100;
+        bool duplicateIncoming = it->x + it->width >= 635 && currTimePoint - m_lastIncomingTimePoint < 100;
+        if(!duplicateOutgoing && !duplicateIncoming) {
+            m_detectedPeople.push_back(DetectedPerson(*it, m_weights[idx], currTimePoint));
+            drawBoundingRect(currFrame, m_classList, *it, m_weights[idx]);
+            idx++;
+        }
     }
 
     // Put efficiency information.

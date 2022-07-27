@@ -17,7 +17,7 @@ class Detector final : public QObject
 public:
     Detector();
     ~Detector();
-    QString detect(cv::Mat &currFrame);
+    QString detect(cv::Mat &currFrame, qint64 currTimePoint);
 
 signals:
     void cameIn();
@@ -32,7 +32,8 @@ private:
     std::list<cv::Rect> m_detectionsFiltered;           //list of detected rects filtered via NMS
     std::vector<int> m_filteredRectsIndicies;           //indexes of filtered rects in vector of all rects
     std::list<DetectedPerson> m_detectedPeople;
-
+    qint64 m_lastIncomingTimePoint;                     //a variable to filter multiple incoming of one person
+    qint64 m_lastOutgoingTimePoint;                     //a variable to filter multiple outgoing of one person
     void clear();
 };
 

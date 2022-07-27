@@ -3,14 +3,8 @@
 #include <opencv2/highgui.hpp>
 
 #include <QDebug>
-#include <vector>
-#include <sstream>
-#include <string>
+#include <QDateTime>
 #include "processor.h"
-
-//Constants for text
-//const cv::Point  BOTTOM_LEFT (50, 440);
-//const cv::Scalar TEXT_COLOUR (255, 255, 0);
 
 Processor::Processor()
     :m_counter()
@@ -33,7 +27,7 @@ void Processor::exec()
 {
     cv::Mat currFrame;
     cv::VideoCapture cap;
-    cap.open("../CameraSoft/test_video_sample_4.mp4");
+    cap.open("../CameraSoft/test_video_sample_3.mp4");
 
     if (!cap.isOpened()) {
         qDebug() << "ERROR! Unable to open default camera";
@@ -56,7 +50,11 @@ void Processor::exec()
             break;
         }
 
-        QString inferenceStatus = m_detector.detect(currFrame);
+        qint64 currTimePoint = QDateTime::currentMSecsSinceEpoch();
+//        if(m_counter.in() == 4 && m_counter.out()== 3 && m_counter.inside()== 1) {
+//            qDebug() << "Breakpoint!";
+//        }
+        QString inferenceStatus = m_detector.detect(currFrame, currTimePoint);
         emit showCurrentFrame(currFrame);
         emit showCurrentInferenceStatus(inferenceStatus);
         emit showCurrentCounterStatus("In: " + QString("%1").arg(m_counter.in())+"  Out: " + QString("%1").arg(m_counter.out())+"  Inside:" + QString("%1").arg(m_counter.inside()));
