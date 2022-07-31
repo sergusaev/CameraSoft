@@ -9,24 +9,25 @@ CONFIG += c++11
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 SOURCES += \
-    counter.cpp \
-    cvimagewidget.cpp \
-    detector.cpp \
+    src/counter.cpp \
+    src/cvimagewidget.cpp \
+    src/detector.cpp \
     main.cpp \
-    mainwindow.cpp \
-    processor.cpp
+    src/mainwindow.cpp \
+    src/processor.cpp
 
 HEADERS += \
-    counter.h \
-    cvimagewidget.h \
-    detector.h \
-    mainwindow.h \
-    processor.h
+    include/counter.h \
+    include/cvimagewidget.h \
+    include/detector.h \
+    include/mainwindow.h \
+    include/processor.h
 
 FORMS += \
-    mainwindow.ui
+    ui/mainwindow.ui
 
 INCLUDEPATH += ../opencv/include
+INCLUDEPATH += include
 
 # OpenCV
 OCV_LIB = \

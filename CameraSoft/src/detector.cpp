@@ -75,7 +75,7 @@ Detector::Detector()
                    "oven", "toaster", "sink", "refrigerator", "book", "clock", "vase", "scissors",
                    "teddy bear", "hair drier", "toothbrush" };
 
-    m_net = cv::dnn::readNet("../CameraSoft/YOLOv5s.onnx");
+    m_net = cv::dnn::readNet("../CameraSoft/dnn/YOLOv5s.onnx");
     m_lastIncomingTimePoint = 0;
     m_lastOutgoingTimePoint = 0;
     std::vector<std::pair<cv::dnn::Backend, cv::dnn::Target>> backends = cv::dnn::getAvailableBackends();
