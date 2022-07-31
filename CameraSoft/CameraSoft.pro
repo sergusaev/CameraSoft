@@ -49,6 +49,9 @@ for(ocv_name, OCV_LIB) {
   }
 }
 
+
+win32: RC_FILE = icon_reg.rc
+
 #DEFINES += DEBUG_OUTPUT
 
 # Default rules for deployment.
